@@ -58,14 +58,16 @@ const userSchema = new mongoose.Schema({
 const User = require('./models/User');
 
 app.post("/signup", async (req, res) => {
-  const newUser = new User({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password
-  });
+  const { name, email, password } = req.body;
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({ message: "Email already exists" });
+  }
+  const newUser = new User({ name, email, password });
   await newUser.save();
   res.json({ message: "Signup success" });
 });
+
 
 
 // LOGIN
