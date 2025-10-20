@@ -6,13 +6,21 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vhkrish03/food_service_backend.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "bugs": {
+    "url": "https://github.com/Vhkrish03/food_service_backend/issues"
+  },
+  "homepage": "https://github.com/Vhkrish03/food_service_backend#readme",
   "dependencies": {
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "mongoose": "^8.19.2"
-  }
+  },
+  "description": ""
 }

@@ -2,7 +2,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const User = require('models\User.js'); // ✅ correct path
+const User = require('./models/User'); // ✅ correct path
+
 
 const app = express();
 app.use(cors());
