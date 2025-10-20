@@ -57,37 +57,51 @@ const userSchema = new mongoose.Schema({
 
 const User = require('./models/User');
 
+
+// Signup
 app.post("/signup", async (req, res) => {
-  const { name, email, password } = req.body;
-  const existingUser = await User.findOne({ email });
-  if (existingUser) {
-    return res.status(400).json({ message: "Email already exists" });
+  try {
+    const { name, email, password } = req.body;
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+
+    const newUser = new User({ name, email, password });
+    await newUser.save();
+
+    res.status(200).json({ message: "Signup success", user: newUser });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error during signup" });
   }
-  const newUser = new User({ name, email, password });
-  await newUser.save();
-  res.json({ message: "Signup success" });
 });
 
-
-
-// LOGIN
+// Login
 app.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  const user = await User.findOne({ email: email.trim(), password: password.trim() });
+    const user = await User.findOne({ email: email.trim(), password: password.trim() });
+    if (!user) {
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
 
-  if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
+    res.json({
+      message: "Login success",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        address: user.address || "",
+      },
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error during login" });
   }
-
-  res.json({
-    message: "Login success",
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-    },
-  });
 });
 
 
