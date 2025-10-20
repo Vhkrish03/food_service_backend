@@ -2,71 +2,28 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const User = require('models\User.js'); // ✅ correct path
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ Connect to MongoDB Atlas
-const atlasUri = 'mongodb+srv://vhkrish03_db_user:hari_food@cluster0.jp4uxeb.mongodb.net/food?retryWrites=true&w=majority';
+// Connect to MongoDB
+mongoose.connect(
+  'mongodb+srv://vhkrish03_db_user:hari_food@cluster0.jp4uxeb.mongodb.net/food?retryWrites=true&w=majority',
+  { useNewUrlParser: true, useUnifiedTopology: true }
+).then(() => console.log('✅ Connected'))
+ .catch(err => console.error(err));
 
-mongoose.connect(atlasUri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => console.log('✅ Connected to MongoDB Atlas successfully'))
-.catch(err => console.error('❌ MongoDB connection error:', err));
+// ------------------- USER AUTH -------------------
 
-// ✅ Generic GET route for any collection
-app.get('/:collectionName', async (req, res) => {
-  try {
-    const collectionName = req.params.collectionName;
-    const Collection = mongoose.connection.collection(collectionName);
-    const items = await Collection.find({}).toArray();
-    res.json(items);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-});
-
-// ✅ Generic POST route to insert one document into any collection
-app.post('/:collectionName', async (req, res) => {
-  try {
-    const collectionName = req.params.collectionName;
-    const data = req.body;
-    const Collection = mongoose.connection.collection(collectionName);
-    const result = await Collection.insertOne(data);
-    res.json({ message: 'Document inserted successfully', insertedId: result.insertedId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
-  }
-});
-
-// ================= USER AUTH SECTION =================
-
-// Schema for Users
-const userSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
-  phone: String,
-  address: String
-});
-
-const User = require('./models/User');
-
-
-// Signup
-app.post("/signup", async (req, res) => {
+// Signup route
+app.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: "Email already exists" });
-    }
+    if (existingUser) return res.status(400).json({ message: "Email already exists" });
 
     const newUser = new User({ name, email, password });
     await newUser.save();
@@ -78,26 +35,14 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login
-app.post("/login", async (req, res) => {
+// Login route
+app.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email: email.trim(), password: password.trim() });
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
+    if (!user) return res.status(401).json({ message: "Invalid credentials" });
 
-    res.json({
-      message: "Login success",
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || "",
-        address: user.address || "",
-      },
-    });
+    res.json({ message: "Login success", user });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error during login" });
@@ -123,10 +68,23 @@ app.put("/update/:email", async (req, res) => {
   res.json({ message: "Profile updated successfully" });
 });
 
+// ------------------- GENERIC COLLECTION ROUTES -------------------
+// Only use these for food/items, not signup/login
+
+// ✅ Generic GET route for any collection
+app.get('/:collectionName', async (req, res) => {
+  const collection = mongoose.connection.collection(req.params.collectionName);
+  const items = await collection.find({}).toArray();
+  res.json(items);
+});
+// ✅ Generic POST route to insert one document into any collection
+app.post('/:collectionName', async (req, res) => {
+  const collection = mongoose.connection.collection(req.params.collectionName);
+  const result = await collection.insertOne(req.body);
+  res.json({ message: "Document inserted", insertedId: result.insertedId });
+});
 
 
 
-// ✅ Start server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on http://0.0.0.0:${PORT}`));
-
+// ✅start server
+app.listen(3001, '0.0.0.0', () => console.log('🚀 Server running'));
