@@ -72,18 +72,43 @@ app.put("/update/:email", async (req, res) => {
 // ------------------- GENERIC COLLECTION ROUTES -------------------
 // Only use these for food/items, not signup/login
 
-// ✅ Generic GET route for any collection
+// ✅ Generic GET route - fetch all documents from any collection
 app.get('/:collectionName', async (req, res) => {
-  const collection = mongoose.connection.collection(req.params.collectionName);
-  const items = await collection.find({}).toArray();
-  res.json(items);
+  try {
+    const collectionName = req.params.collectionName; // e.g., 'fastfood' or 'signup'
+    const Collection = mongoose.connection.collection(collectionName);
+    
+    // Fetch all items
+    const items = await Collection.find({}).toArray();
+
+    res.json(items);
+  } catch (err) {
+    console.error("❌ Error in GET route:", err);
+    res.status(500).send('Server error while fetching data');
+  }
 });
-// ✅ Generic POST route to insert one document into any collection
+
+
+// ✅ Generic POST route - insert one document into any collection
 app.post('/:collectionName', async (req, res) => {
-  const collection = mongoose.connection.collection(req.params.collectionName);
-  const result = await collection.insertOne(req.body);
-  res.json({ message: "Document inserted", insertedId: result.insertedId });
+  try {
+    const collectionName = req.params.collectionName; // e.g., 'signup'
+    const data = req.body; // JSON data sent by Flutter
+    const Collection = mongoose.connection.collection(collectionName);
+
+    // Insert the document
+    const result = await Collection.insertOne(data);
+
+    res.json({
+      message: 'Document inserted successfully',
+      insertedId: result.insertedId
+    });
+  } catch (err) {
+    console.error("❌ Error in POST route:", err);
+    res.status(500).send('Server error while inserting data');
+  }
 });
+
 
 
 
